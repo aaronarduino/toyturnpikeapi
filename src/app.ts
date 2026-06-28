@@ -1,10 +1,15 @@
 // const express = require("express");
 // const express = require("express");
 import express from "express";
+import { toNodeHandler } from "better-auth/node";
+import { auth, requireAuth } from "./utils/auth.js";
 var app = express();
 const port = 3000;
 
-app.get("/", (req, res) => {
+app.all("/api/auth/{*any}", toNodeHandler(auth));
+app.use(express.json());
+
+app.get("/", requireAuth, (req, res) => {
   res.send({ message: "Hello, world!" });
 });
 
@@ -19,7 +24,7 @@ app.get("/dashboard", (req, res) => {
   });
 });
 
-app.get("/dashboard/payments", (req, res) => {
+app.get("/dashboard/payments", requireAuth, (req, res) => {
   res.send({
     statement_balance: 0.0,
     auto_pay_date: "07/01/2026",
@@ -27,7 +32,7 @@ app.get("/dashboard/payments", (req, res) => {
   });
 });
 
-app.get("/dashboard/payment_methods", (req, res) => {
+app.get("/dashboard/payment_methods", requireAuth, (req, res) => {
   res.send({
     primary: {
       card_number: 1234,
@@ -36,14 +41,14 @@ app.get("/dashboard/payment_methods", (req, res) => {
   });
 });
 
-app.get("/dashboard/vehicles_toytags", (req, res) => {
+app.get("/dashboard/vehicles_toytags", requireAuth, (req, res) => {
   res.send({
     vehicles: 1,
     toytags: 1,
   });
 });
 
-app.get("/dashboard/activity", (req, res) => {
+app.get("/dashboard/activity", requireAuth, (req, res) => {
   res.send({
     tolls: 0,
     fees: 0,
