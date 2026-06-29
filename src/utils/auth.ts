@@ -4,6 +4,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { config } from "dotenv";
 import type { NextFunction } from "express";
 import { fromNodeHeaders } from "better-auth/node";
+import { expo } from "@better-auth/expo";
 
 config();
 
@@ -11,6 +12,8 @@ const client = new MongoClient(process.env.DB_URI as string);
 const db = client.db();
 
 export const auth = betterAuth({
+  trustedOrigins: ["exp://*", "toyturnpikemobile://"],
+  plugins: [expo()],
   database: mongodbAdapter(db, {
     // Optional: if you don't provide a client, database transactions won't be enabled.
     client,

@@ -13,7 +13,7 @@ app.get("/", requireAuth, (req, res) => {
   res.send({ message: "Hello, world!" });
 });
 
-app.get("/dashboard", (req, res) => {
+app.get("/dashboard", requireAuth, (req, res) => {
   res.send({
     account: {
       id: 254503,
