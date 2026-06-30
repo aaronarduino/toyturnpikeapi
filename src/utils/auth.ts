@@ -5,11 +5,8 @@ import { config } from "dotenv";
 import type { NextFunction } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { expo } from "@better-auth/expo";
-
-config();
-
-const client = new MongoClient(process.env.DB_URI as string);
-const db = client.db();
+import { client, db } from "./database.js";
+import type { IncomingHttpHeaders } from "http";
 
 export const auth = betterAuth({
   trustedOrigins: ["exp://*", "toyturnpikemobile://"],
