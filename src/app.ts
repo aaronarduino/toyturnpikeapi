@@ -4,8 +4,13 @@ import express from "express";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { auth, requireAuth } from "./utils/auth.js";
 import { client, db, testDb } from "./utils/database.js";
+import { BuildRepo, type Repo } from "./services/repo.js";
+import type { Vehicle } from "./services/repo/vehicles.js";
+import type { Activity } from "./services/repo/activity.js";
+
 var app = express();
 const port = 3000;
+const repo: Repo = BuildRepo();
 
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
@@ -29,12 +34,34 @@ app.get("/dashboard", requireAuth, (req, res) => {
   });
 });
 
-app.get("/dashboard/payments", requireAuth, (req, res) => {
-  res.send({
+app.get("/dashboard/payments", requireAuth, async (req, res) => {
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  const startDate: Date = new Date();
+
+  // TODO: Gather data from all the different repos
+  startDate.setDate(1);
+  const activities: Activity[] = await repo.activities.getActivitiesByDateRange(
+    session?.user.id as string,
+    startDate,
+    new Date(),
+  );
+  // Satements
+  // Account meta
+
+  // Guards:
+  if (activities.length < 1) {
+    // TODO: return error status code
+  }
+
+  const payments = {
     statement_balance: 0.0,
     auto_pay_date: "07/01/2026",
-    current_account_balance: 0.0,
-  });
+    current_account_balance: activities[0],
+  };
+
+  res.send(payments);
 });
 
 app.get("/dashboard/payment_methods", requireAuth, async (req, res) => {
@@ -93,11 +120,9 @@ app.get("/vehicles", requireAuth, async (req, res) => {
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
   });
-  const vehiclesDb = testDb.collection("vehicles");
-
-  const vehiclesData = await vehiclesDb
-    .find({ account_id: session?.user.id })
-    .toArray();
+  const vehiclesData: Vehicle[] = await repo.vehicles.getVehicles(
+    session?.user.id as string,
+  );
 
   res.send({
     vehicles: vehiclesData,
