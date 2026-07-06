@@ -52,7 +52,7 @@ app.get("/dashboard/payments", requireAuth, async (req, res) => {
 
   // Guards:
   if (activities.length < 1) {
-    // TODO: return error status code
+    return res.status(404).send({ error: "No activity found for the given date range" });
   }
 
   const payments = {
