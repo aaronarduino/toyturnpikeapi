@@ -12,17 +12,6 @@ const repo: Repo = BuildRepo();
 
 router.use(requireAuth);
 
-router.get("/", (req, res) => {
-  res.send({
-    account: {
-      id: 254503,
-      holder: "test name",
-      primary_address: "1234 test lane, test city, CA, US",
-      logged_in: true,
-    },
-  });
-});
-
 router.get("/payments", async (req, res) => {
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
