@@ -67,8 +67,6 @@ export class ActivitiesRepo {
       ])
       .toArray();
 
-    console.log(JSON.stringify(activities));
-
     return activities.sort(
       (a, b) => b.activity.getTime() - a.activity.getTime(),
     );
