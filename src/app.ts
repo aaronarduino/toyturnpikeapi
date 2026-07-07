@@ -52,13 +52,15 @@ app.get("/dashboard/payments", requireAuth, async (req, res) => {
 
   // Guards:
   if (activities.length < 1) {
-    return res.status(404).send({ error: "No activity found for the given date range" });
+    return res
+      .status(404)
+      .send({ error: "No activity found for the given date range" });
   }
 
   const payments = {
     statement_balance: 0.0,
     auto_pay_date: "07/01/2026",
-    current_account_balance: activities[0],
+    current_account_balance: activities[0]?.balance,
   };
 
   res.send(payments);
@@ -144,6 +146,10 @@ app.get("/vehicles/toytags", requireAuth, async (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+export default app;
+
+if (process.env.NODE_ENV !== "test") {
+  app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`);
+  });
+}

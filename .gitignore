@@ -47,6 +47,13 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# Compiled JS output in src (tsc outputs to dist/, stale artifacts shouldn't be here)
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts.map
+# Keep hand-written type declarations
+# src/**/*.d.ts is intentionally excluded — some declaration files may be hand-written
+
 # Optional npm cache directory
 .npm
 

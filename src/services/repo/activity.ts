@@ -25,6 +25,7 @@ export type Activity = {
   vehicle: string | null;
   toytag: string | null;
   amount: number;
+  balance: number;
   posted: Date;
 };
 // export type Activity = {
@@ -66,6 +67,10 @@ export class ActivitiesRepo {
       ])
       .toArray();
 
-    return activities.sort((a, b) => b.posted.getTime() - a.posted.getTime());
+    console.log(JSON.stringify(activities));
+
+    return activities.sort(
+      (a, b) => b.activity.getTime() - a.activity.getTime(),
+    );
   }
 }
