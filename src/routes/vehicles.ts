@@ -27,11 +27,10 @@ router.get("/toytags", async (req, res) => {
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
   });
-  const toytagsDb = testDb.collection("toytags_vehicles");
 
-  const toytagsData = await toytagsDb
-    .find({ account_id: session?.user.id })
-    .toArray();
+  const toytagsData = await repo.toytags.getToytagsByAccountId(
+    session?.user.id as string,
+  );
 
   res.send({
     toytags: toytagsData,

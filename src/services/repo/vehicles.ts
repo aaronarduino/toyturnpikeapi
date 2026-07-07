@@ -14,4 +14,12 @@ export class VehiclesRepo {
       .toArray();
     return vehiclesData;
   }
+
+  async getVehiclesCountByAccountId(account_id: string): Promise<number> {
+    const vehiclesDb = testDb.collection("vehicles");
+    const vehiclesCount: number = await vehiclesDb.countDocuments({
+      account_id: account_id,
+    });
+    return vehiclesCount;
+  }
 }

@@ -28,11 +28,6 @@ export type Activity = {
   balance: number;
   posted: Date;
 };
-// export type Activity = {
-//   statement_balance: number;
-//   auto_pay_date: string;
-//   current_account_balance: number;
-// };
 
 export class ActivitiesRepo {
   async getActivitiesByDateRange(
