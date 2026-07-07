@@ -107,12 +107,12 @@ router.get("/activity", async (req, res) => {
   );
 
   res.send({
-    tolls: activities.filter((a) => (a.type = ActivityType.Toll)).length,
-    fees: activities.filter((a) => (a.type = ActivityType.Fee)).length,
-    payments: activities.filter((a) => (a.type = ActivityType.Payment)).length,
-    adjustments: activities.filter((a) => (a.type = ActivityType.Adjustment))
+    tolls: activities.filter((a) => a.type === ActivityType.Toll).length,
+    fees: activities.filter((a) => a.type === ActivityType.Fee).length,
+    payments: activities.filter((a) => a.type === ActivityType.Payment).length,
+    adjustments: activities.filter((a) => a.type === ActivityType.Adjustment)
       .length,
-    refunds: activities.filter((a) => (a.type = ActivityType.Refund)).length,
+    refunds: activities.filter((a) => a.type === ActivityType.Refund).length,
   });
 });
 

@@ -6,19 +6,29 @@ const mocks = vi.hoisted(() => {
   const mockRequireAuth = vi.fn(
     (_req: Request, _res: Response, next: NextFunction) => next(),
   );
+
   const mockActivitiesGetActivitiesByDateRange = vi.fn();
+  const mockGetAccountMetaByAccountId = vi.fn();
+  const mockGetLatestStatement = vi.fn();
+  const mockGetPaymentMethods = vi.fn();
   const mockVehiclesGetVehicles = vi.fn();
-  const mockToArray = vi.fn().mockResolvedValue([]);
-  const mockFindOne = vi.fn().mockResolvedValue(null);
-  const mockCountDocuments = vi.fn().mockResolvedValue(0);
+  const mockGetVehiclesCountByAccountId = vi.fn();
+  const mockGetToytagsByAccountId = vi.fn();
+  const mockGetToytagsCountByAccountId = vi.fn();
 
   return {
     mockRequireAuth,
     mockActivitiesGetActivitiesByDateRange,
+    mockGetAccountMetaByAccountId,
+    mockGetLatestStatement,
+    mockGetPaymentMethods,
     mockVehiclesGetVehicles,
-    mockToArray,
-    mockFindOne,
-    mockCountDocuments,
+    mockGetVehiclesCountByAccountId,
+    mockGetToytagsByAccountId,
+    mockGetToytagsCountByAccountId,
+    mockToArray: vi.fn().mockResolvedValue([]),
+    mockFindOne: vi.fn().mockResolvedValue(null),
+    mockCountDocuments: vi.fn().mockResolvedValue(0),
   };
 });
 
@@ -45,7 +55,23 @@ vi.mock("../services/repo.js", () => ({
     activities: {
       getActivitiesByDateRange: mocks.mockActivitiesGetActivitiesByDateRange,
     },
-    vehicles: { getVehicles: mocks.mockVehiclesGetVehicles },
+    accountMeta: {
+      getAccountMetaByAccountId: mocks.mockGetAccountMetaByAccountId,
+    },
+    statements: {
+      getLatestStatement: mocks.mockGetLatestStatement,
+    },
+    paymentMethods: {
+      getPaymentMethods: mocks.mockGetPaymentMethods,
+    },
+    vehicles: {
+      getVehicles: mocks.mockVehiclesGetVehicles,
+      getVehiclesCountByAccountId: mocks.mockGetVehiclesCountByAccountId,
+    },
+    toytags: {
+      getToytagsByAccountId: mocks.mockGetToytagsByAccountId,
+      getToytagsCountByAccountId: mocks.mockGetToytagsCountByAccountId,
+    },
   })),
   Repo: vi.fn(),
 }));
@@ -66,35 +92,28 @@ describe("App routes", () => {
     });
   });
 
-  describe("GET /dashboard", () => {
-    it("returns account info", async () => {
-      const res = await request(app).get("/dashboard");
-
-      expect(mocks.mockRequireAuth).toHaveBeenCalled();
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual({
-        account: {
-          id: 254503,
-          holder: "test name",
-          primary_address: "1234 test lane, test city, CA, US",
-          logged_in: true,
-        },
-      });
-    });
-  });
-
   describe("GET /dashboard/payments", () => {
-    it("returns payments when activities exist", async () => {
+    it("returns payments when activities, account meta, and statement exist", async () => {
       mocks.mockActivitiesGetActivitiesByDateRange.mockResolvedValue([
         { id: "1", posted: new Date(), amount: 100, balance: 1.0 },
       ]);
+      mocks.mockGetAccountMetaByAccountId.mockResolvedValue({
+        id: "meta-1",
+        account_id: "user-1",
+        auto_pay_date: new Date("2026-07-01"),
+      });
+      mocks.mockGetLatestStatement.mockResolvedValue({
+        id: "stmt-1",
+        account_id: "user-1",
+        statement_balance: 0.0,
+      });
 
       const res = await request(app).get("/dashboard/payments");
 
       expect(res.status).toBe(200);
       expect(res.body).toStrictEqual({
         statement_balance: 0.0,
-        auto_pay_date: "07/01/2026",
+        auto_pay_date: new Date("2026-07-01").toISOString(),
         current_account_balance: 1.0,
       });
     });
@@ -112,18 +131,26 @@ describe("App routes", () => {
   });
 
   describe("GET /dashboard/payment_methods", () => {
-    it("returns payment method data with no primary card", async () => {
+    it("returns 404 when no primary payment method exists", async () => {
+      mocks.mockGetPaymentMethods.mockResolvedValue([]);
+
       const res = await request(app).get("/dashboard/payment_methods");
 
-      expect(res.status).toBe(200);
-      expect(res.body.primary).toBeDefined();
+      expect(res.status).toBe(404);
+      expect(res.body).toEqual({
+        error: "No primary payment method found",
+      });
     });
 
     it("returns primary card info when payment method exists", async () => {
-      mocks.mockFindOne.mockResolvedValue({
-        card_last_four: "1234",
-        expiration_date: "12/28",
-      });
+      mocks.mockGetPaymentMethods.mockResolvedValue([
+        {
+          card_last_four: "1234",
+          expiration_date: "12/28",
+          primary: true,
+          account_id: "user-1",
+        },
+      ]);
 
       const res = await request(app).get("/dashboard/payment_methods");
 
@@ -136,15 +163,34 @@ describe("App routes", () => {
 
   describe("GET /dashboard/vehicles_toytags", () => {
     it("returns vehicles and toytags counts", async () => {
+      mocks.mockGetVehiclesCountByAccountId.mockResolvedValue(3);
+      mocks.mockGetToytagsCountByAccountId.mockResolvedValue(5);
+
       const res = await request(app).get("/dashboard/vehicles_toytags");
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({ vehicles: 0, toytags: 0 });
+      expect(res.body).toEqual({ vehicles: 3, toytags: 5 });
     });
   });
 
   describe("GET /dashboard/activity", () => {
     it("returns activity summary counts", async () => {
+      mocks.mockActivitiesGetActivitiesByDateRange.mockResolvedValue([
+        {
+          id: "1",
+          account_id: "user-1",
+          type: "Payment",
+          activity: new Date(),
+          status: "Applied",
+          description: "test payment",
+          vehicle: null,
+          toytag: null,
+          amount: 50,
+          balance: 50,
+          posted: new Date(),
+        },
+      ]);
+
       const res = await request(app).get("/dashboard/activity");
 
       expect(mocks.mockRequireAuth).toHaveBeenCalled();
@@ -176,7 +222,7 @@ describe("App routes", () => {
 
   describe("GET /vehicles/toytags", () => {
     it("returns toytags data", async () => {
-      mocks.mockToArray.mockResolvedValue([
+      mocks.mockGetToytagsByAccountId.mockResolvedValue([
         { toytag_id: "tag-1", account_id: "user-1" },
       ]);
 

@@ -18,12 +18,10 @@ vi.mock("mongodb", () => {
     collection: vi.fn(() => mockCollection),
   };
 
-  const mockMongoClient = {
-    db: vi.fn(() => mockDb),
-  };
-
   return {
-    MongoClient: vi.fn(() => mockMongoClient),
+    MongoClient: function () {
+      return { db: vi.fn(() => mockDb) };
+    },
     ObjectId: vi.fn((id: string) => id),
   };
 });
