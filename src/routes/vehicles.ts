@@ -23,6 +23,25 @@ router.get("/", async (req, res) => {
   });
 });
 
+router.post("/", async (req, res) => {
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  const { plate_number, state } = req.body;
+
+  if (!plate_number || !state) {
+    return res.status(400).send({ error: "plate_number and state are required" });
+  }
+
+  const vehicle: Vehicle = await repo.vehicles.createVehicle({
+    plate_number,
+    state,
+    account_id: session?.user.id as string,
+  });
+
+  res.status(201).send({ vehicle });
+});
+
 router.get("/toytags", async (req, res) => {
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),

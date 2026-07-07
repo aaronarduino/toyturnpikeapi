@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => {
   const mockGetLatestStatement = vi.fn();
   const mockGetPaymentMethods = vi.fn();
   const mockVehiclesGetVehicles = vi.fn();
+  const mockCreateVehicle = vi.fn();
   const mockGetVehiclesCountByAccountId = vi.fn();
   const mockGetToytagsByAccountId = vi.fn();
   const mockGetToytagsCountByAccountId = vi.fn();
@@ -23,6 +24,7 @@ const mocks = vi.hoisted(() => {
     mockGetLatestStatement,
     mockGetPaymentMethods,
     mockVehiclesGetVehicles,
+    mockCreateVehicle,
     mockGetVehiclesCountByAccountId,
     mockGetToytagsByAccountId,
     mockGetToytagsCountByAccountId,
@@ -67,6 +69,7 @@ vi.mock("../services/repo.js", () => ({
     vehicles: {
       getVehicles: mocks.mockVehiclesGetVehicles,
       getVehiclesCountByAccountId: mocks.mockGetVehiclesCountByAccountId,
+      createVehicle: mocks.mockCreateVehicle,
     },
     toytags: {
       getToytagsByAccountId: mocks.mockGetToytagsByAccountId,
@@ -217,6 +220,43 @@ describe("App routes", () => {
       expect(res.body).toEqual({
         vehicles: [{ plate_number: "ABC-123", state: "CA" }],
       });
+    });
+  });
+
+  describe("POST /vehicles", () => {
+    it("creates a vehicle and returns 201", async () => {
+      const newVehicle = { plate_number: "ABC-123", state: "CA" };
+      mocks.mockCreateVehicle.mockResolvedValue({
+        ...newVehicle,
+        account_id: "user-1",
+      });
+
+      const res = await request(app)
+        .post("/vehicles")
+        .send(newVehicle);
+
+      expect(res.status).toBe(201);
+      expect(res.body).toEqual({
+        vehicle: { plate_number: "ABC-123", state: "CA", account_id: "user-1" },
+      });
+    });
+
+    it("returns 400 when plate_number is missing", async () => {
+      const res = await request(app)
+        .post("/vehicles")
+        .send({ state: "CA" });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "plate_number and state are required" });
+    });
+
+    it("returns 400 when state is missing", async () => {
+      const res = await request(app)
+        .post("/vehicles")
+        .send({ plate_number: "ABC-123" });
+
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "plate_number and state are required" });
     });
   });
 

@@ -22,4 +22,10 @@ export class VehiclesRepo {
     });
     return vehiclesCount;
   }
+
+  async createVehicle(vehicle: Vehicle): Promise<Vehicle> {
+    const vehiclesDb = testDb.collection("vehicles");
+    await vehiclesDb.insertOne(vehicle);
+    return vehicle;
+  }
 }

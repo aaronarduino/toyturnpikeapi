@@ -49,7 +49,11 @@ router.get("/payments", async (req, res) => {
 
   const payments = {
     statement_balance: statement?.statement_balance,
-    auto_pay_date: accountMeta?.auto_pay_date,
+    auto_pay_date: accountMeta?.auto_pay_date.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    }),
     current_account_balance: activities[0]?.balance,
   };
 
@@ -72,7 +76,14 @@ router.get("/payment_methods", async (req, res) => {
   res.send({
     primary: {
       card_number: paymentMethods[0]?.card_last_four,
-      expiration_date: paymentMethods[0]?.expiration_date,
+      expiration_date: paymentMethods[0]?.expiration_date.toLocaleDateString(
+        "en-US",
+        {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        },
+      ),
     },
   });
 });

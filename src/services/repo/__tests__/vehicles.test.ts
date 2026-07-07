@@ -6,11 +6,12 @@ const mongoMock = vi.hoisted(() => {
   const aggregate = vi.fn();
   const findOne = vi.fn();
   const countDocuments = vi.fn();
-  const collection = { aggregate, find, findOne, countDocuments };
+  const insertOne = vi.fn();
+  const collection = { aggregate, find, findOne, countDocuments, insertOne };
   const db = { collection: vi.fn(() => collection) };
 
   return {
-    toArray, find, db, findOne, countDocuments,
+    toArray, find, db, findOne, countDocuments, insertOne,
     MongoClient: function () { return { db: vi.fn(() => db) }; },
     ObjectId: vi.fn((id: string) => id),
   };
@@ -68,5 +69,26 @@ describe("VehiclesRepo.getVehicles", () => {
     const result = await repo.getVehicles(accountId);
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("VehiclesRepo.createVehicle", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("inserts a vehicle and returns it", async () => {
+    const vehicle = { plate_number: "ABC-123", state: "CA", account_id: accountId };
+
+    const result = await repo.createVehicle(vehicle);
+
+    expect(mongoMock.insertOne).toHaveBeenCalledWith(vehicle);
+    expect(result).toEqual(vehicle);
+  });
+
+  it("uses the vehicles collection", async () => {
+    await repo.createVehicle({ plate_number: "X", state: "Y", account_id: accountId });
+
+    expect(mongoMock.db.collection).toHaveBeenCalledWith("vehicles");
   });
 });
